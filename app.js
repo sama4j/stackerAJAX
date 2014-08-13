@@ -151,5 +151,3 @@ var showAnswerers = function(answers) {
 
 	return result;
 };
-
-
