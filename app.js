@@ -6,6 +6,11 @@ $(document).ready( function() {
 		var tags = $(this).find("input[name='tags']").val();
 		getUnanswered(tags);
 	});
+	$('.inspiration-getter').submit(function(event){
+		$('.results').html('');
+		var tag2 = $(this).find("input[name='answerers']").val();
+		getAnswerers(tag2);
+	});
 });
 
 // this function takes the question object returned by StackOverflow 
@@ -88,5 +93,63 @@ var getUnanswered = function(tags) {
 	});
 };
 
+var getAnswerers = function(tag2) {
+	
+	// the parameters we need to pass in our request to StackOverflow's API
+	var request = {tagged: tag2,
+					period: 'all_time',
+					site: 'stackoverflow'};
+	
+	var result = $.ajax({
+		url: "http://api.stackexchange.com/2.2/tags/"+request.tagged+"/top-answerers/all_time",
+		data: request,
+		dataType: "jsonp",
+		type: "GET",
+		})
+	.done(function(result){
+		var searchResults = showSearchResults(request.tagged, result.items.length);
+
+		$('.search-results').html(searchResults);
+
+		$.each(result.items, function(i, item) {
+			var answers = showAnswerers(item);
+			$('.results').append(answers);
+		});
+	})
+	.fail(function(jqXHR, error, errorThrown){
+		var errorElem = showError(error);
+		$('.search-results').append(errorElem);
+	});
+};
+
+var showAnswerers = function(answers) {
+	
+	// clone our result template code
+	var result = $('.homework .queried').clone();
+	
+	// Set the question properties in result
+	var questionElem = result.find('.userB a');
+	questionElem.attr('href', answers.user.profile_image);
+	questionElem.text(answers.user.display_name);
+
+	// set the date asked property in result
+	var asked = result.find('.typeuser');
+	asked.text(answers.user.user_type);
+
+	// set the #views for question property in result
+	var viewed = result.find('.repute');
+	viewed.text(answers.user.reputation);
+
+	// set some properties related to asker
+	var asker = result.find('.dalink');
+	asker.html('<p>Accept Rate: <a target="_blank" href='+ answers.user.link + ' >' +
+													answers.user.accept_rate +
+												'</a>' +
+							'</p>' +
+ 							'<p>PostCount: ' + answers.post_count + '</p>'
+	);
+
+	return result;
+};
 
 
